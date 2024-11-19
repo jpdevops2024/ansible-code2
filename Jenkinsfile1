@@ -6,7 +6,7 @@ pipeline {
             steps {
                 // Remove any existing `.zip` files in the workspace to avoid conflicts.
                 sh 'rm -rf *.zip || echo ""'
-                
+
                 // Create a zip file named `ansible-${BUILD_ID}.zip` containing all files in the workspace,
                 // excluding the Jenkinsfile to keep the pipeline file separate from the artifact.
                 sh 'zip -r ansible-${BUILD_ID}.zip * --exclude Jenkinsfile'
@@ -16,10 +16,44 @@ pipeline {
         stage('upload artifacts to jfrog') {
             steps {
                 // Use `curl` to upload the zip file to a JFrog Artifactory repository with the updated URL and format.
-                sh 'curl -uadmin:AP8gcgmmset5jeYChTJYDN6XmDd -T ansible-${BUILD_ID}.zip \
-                "http://ec2-100-27-22-80.compute-1.amazonaws.com:8081/artifactory/ansible/ansible-${BUILD_ID}.zip"'
+                sh '''
+                    curl -uadmin:AP8gcgmmset5jeYChTJYDN6XmDd -T ansible-${BUILD_ID}.zip \
+                    "http://ec2-100-27-22-80.compute-1.amazonaws.com:8081/artifactory/ansible/ansible-${BUILD_ID}.zip"
+                '''
             }
         }
 
+        stage('publish to ansible server') {
+            steps {
+                sshPublisher(publishers: [
+                    sshPublisherDesc(
+                        configName: 'AnsibleServer',  // Specify your SSH configuration name here
+                        transfers: [
+                            sshTransfer(
+                                cleanRemote: false,  // Don't remove files from the remote directory before transferring
+                                excludes: '',  // No files to exclude
+                                execCommand: 'ls',  // Replace with the command to run on the server (e.g., 'ls' for listing files)
+                                execTimeout: 120000,  // Set the timeout for the command
+                                flatten: false,  // Don't flatten directory structure
+                                makeEmptyDirs: false,  // Don't create empty directories on the remote server
+                                noDefaultExcludes: false,  // Include default exclusions
+                                patternSeparator: '[, ]+',  // Define separator for multiple patterns
+                                remoteDirectory: '/home/ec2-user',  // Path on the Ansible server
+                                remoteDirectorySDF: false,  // Do not resolve the remote directory as a dynamic file path
+                                removePrefix: '',  // Do not remove any prefix from the files
+                                sourceFiles: 'ansible-*.zip'  // Pattern for files to transfer
+                            )
+                        ],
+                        usePromotionTimestamp: false,  // Don't use promotion timestamps
+                        useWorkspaceInPromotion: false,  // Don't use workspace for promotion
+                        verbose: false  // Turn off verbose output
+                    )
+                ])
+            }
+        }
     }
 }
+
+
+
+
