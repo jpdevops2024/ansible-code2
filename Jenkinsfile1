@@ -1,0 +1,25 @@
+pipeline {
+    agent any
+
+    stages {
+        stage('zip the file') {
+            steps {
+                // Remove any existing `.zip` files in the workspace to avoid conflicts.
+                sh 'rm -rf *.zip || echo ""'
+                
+                // Create a zip file named `ansible-${BUILD_ID}.zip` containing all files in the workspace,
+                // excluding the Jenkinsfile to keep the pipeline file separate from the artifact.
+                sh 'zip -r ansible-${BUILD_ID}.zip * --exclude Jenkinsfile'
+            }
+        }
+
+        stage('upload artifacts to jfrog') {
+            steps {
+                // Use `curl` to upload the zip file to a JFrog Artifactory repository with the updated URL and format.
+                sh 'curl -uadmin:AP8gcgmmset5jeYChTJYDN6XmDd -T ansible-${BUILD_ID}.zip \
+                "http://ec2-100-27-22-80.compute-1.amazonaws.com:8081/artifactory/ansible/ansible-${BUILD_ID}.zip"'
+            }
+        }
+
+    }
+}
