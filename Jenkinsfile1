@@ -40,7 +40,7 @@ pipeline {
                                 patternSeparator: '[, ]+',  // Define separator for multiple patterns
                                 remoteDirectory: '/home/ec2-user',  // Path on the Ansible server
                                 remoteDirectorySDF: false,  // Do not resolve the remote directory as a dynamic file path
-                                removePrefix: '',  // Do not remove any prefix from the files
+                                removePrefix: 'home/ec2-user',  // Do not remove any prefix from the files
                                 sourceFiles: 'ansible-*.zip'  // Pattern for files to transfer
                             )
                         ],
