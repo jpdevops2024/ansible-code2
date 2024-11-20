@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -19,7 +18,7 @@ pipeline {
                 // Use `curl` to upload the zip file to a JFrog Artifactory repository with the updated URL and format.
                 sh '''
                     curl -uadmin:AP8gcgmmset5jeYChTJYDN6XmDd -T ansible-${BUILD_ID}.zip \
-                    "http://ec2-52.207.209.245:8081/artifactory/ansible/ansible-${BUILD_ID}.zip"
+                    "http://ec2-34-238-151-83.compute-1.amazonaws.com:8081/artifactory/myansible/ansible-${BUILD_ID}.zip"
                 '''
             }
         }
@@ -28,7 +27,7 @@ pipeline {
             steps {
                 sshPublisher(publishers: [
                     sshPublisherDesc(
-                        configName: 'AnsibleServer',  // Specify your SSH configuration name here
+                        configName: 'AnsibleServer',
                         transfers: [
                             sshTransfer(
                                 cleanRemote: false,  // Don't remove files from the remote directory before transferring
@@ -54,5 +53,3 @@ pipeline {
         }
     }
 }
-
-
